@@ -15,7 +15,7 @@ pub static AUTO_EXPLAIN_LOG_NESTED_STATEMENTS: GucSetting<bool> = GucSetting::<b
 pub static AUTO_EXPLAIN_SAMPLE_RATE: GucSetting<f64> = GucSetting::<f64>::new(1.0);
 
 #[derive(PostgresGucEnum, Clone, Copy, PartialEq, Debug)]
-enum ExplainFormat {
+pub enum ExplainFormat {
 	TEXT,
 	XML,
 	JSON,
@@ -35,7 +35,7 @@ impl ExplainFormat {
 }
 
 #[derive(PostgresGucEnum, Clone, Copy, PartialEq, Debug)]
-enum GucLogLevel {
+pub enum GucLogLevel {
     DEBUG5 = PgLogLevel::DEBUG5 as isize,
     DEBUG4 = PgLogLevel::DEBUG4 as isize,
     DEBUG3 = PgLogLevel::DEBUG3 as isize,
@@ -46,6 +46,38 @@ enum GucLogLevel {
     WARNING = PgLogLevel::WARNING as isize,
     LOG = PgLogLevel::LOG as isize,
     NULL = 0,
+}
+
+impl GucLogLevel {
+    pub fn log_level(self) -> PgLogLevel {
+        match self {
+            GucLogLevel::DEBUG => PgLogLevel::DEBUG2,
+            GucLogLevel::DEBUG1 => PgLogLevel::DEBUG1,
+            GucLogLevel::DEBUG3 => PgLogLevel::DEBUG3,
+            GucLogLevel::DEBUG4 => PgLogLevel::DEBUG4,
+            GucLogLevel::DEBUG5 => PgLogLevel::DEBUG5,
+            GucLogLevel::INFO => PgLogLevel::INFO,
+            GucLogLevel::NOTICE => PgLogLevel::NOTICE,
+            GucLogLevel::WARNING => PgLogLevel::WARNING,
+            GucLogLevel::LOG => PgLogLevel::LOG,
+            GucLogLevel::NULL => (0 as isize).into(),
+        }
+    }
+
+    pub fn errcode(self) -> PgSqlErrorCode {
+        match self {
+            GucLogLevel::DEBUG => PgSqlErrorCode::ERRCODE_SUCCESSFUL_COMPLETION,
+            GucLogLevel::DEBUG1 => PgSqlErrorCode::ERRCODE_SUCCESSFUL_COMPLETION,
+            GucLogLevel::DEBUG3 => PgSqlErrorCode::ERRCODE_SUCCESSFUL_COMPLETION,
+            GucLogLevel::DEBUG4 => PgSqlErrorCode::ERRCODE_SUCCESSFUL_COMPLETION,
+            GucLogLevel::DEBUG5 => PgSqlErrorCode::ERRCODE_SUCCESSFUL_COMPLETION,
+            GucLogLevel::INFO => PgSqlErrorCode::ERRCODE_SUCCESSFUL_COMPLETION,
+            GucLogLevel::NOTICE => PgSqlErrorCode::ERRCODE_SUCCESSFUL_COMPLETION ,
+            GucLogLevel::WARNING => PgSqlErrorCode::ERRCODE_WARNING ,
+            GucLogLevel::LOG => PgSqlErrorCode::ERRCODE_SUCCESSFUL_COMPLETION,
+            GucLogLevel::NULL => PgSqlErrorCode::ERRCODE_SUCCESSFUL_COMPLETION,
+        }
+    }
 }
 
 
@@ -61,7 +93,7 @@ pub fn auto_explain_enabled() -> bool{
 
 pub fn init() {
     GucRegistry::define_int_guc(
-        "auto_explain.log_min_duration",
+        "auto_explain_rs.log_min_duration",
         "Sets the minimum execution time above which plans will be logged.",
 		"Zero prints all plans. -1 turns this feature off.",
         &AUTO_EXPLAIN_LOG_MIN_DURATION,
@@ -72,7 +104,7 @@ pub fn init() {
     );
 
     GucRegistry::define_int_guc(
-        "auto_explain.log_parameter_max_length",
+        "auto_explain_rs.log_parameter_max_length",
         "Sets the maximum length of query parameters to log.",
         "Zero logs no query parameters, -1 logs them in full.",
         &AUTO_EXPLAIN_LOG_PARAMETER_MAX_LENGTH,
@@ -83,7 +115,7 @@ pub fn init() {
     );
 
     GucRegistry::define_bool_guc(
-        "auto_explain.log_analyze",
+        "auto_explain_rs.log_analyze",
         "Use EXPLAIN ANALYZE for plan logging.",
         "",
         &AUTO_EXPLAIN_LOG_ANALYZE,
@@ -92,7 +124,7 @@ pub fn init() {
     );
 
     GucRegistry::define_bool_guc(
-        "auto_explain.log_settings",
+        "auto_explain_rs.log_settings",
         "Log modified configuration parameters affecting query planning.",
         "",
         &AUTO_EXPLAIN_LOG_SETTINGS,
@@ -101,7 +133,7 @@ pub fn init() {
     );
 
     GucRegistry::define_bool_guc(
-        "auto_explain.log_verbose",
+        "auto_explain_rs.log_verbose",
         "Use EXPLAIN VERBOSE for plan logging.",
         "",
         &AUTO_EXPLAIN_LOG_VERBOSE,
@@ -110,7 +142,7 @@ pub fn init() {
     );
 
     GucRegistry::define_bool_guc(
-        "auto_explain.log_buffers",
+        "auto_explain_rs.log_buffers",
         "Log buffers usage.",
         "",
         &AUTO_EXPLAIN_LOG_BUFFERS,
@@ -119,7 +151,7 @@ pub fn init() {
     );
 
     GucRegistry::define_bool_guc(
-        "auto_explain.log_wal",
+        "auto_explain_rs.log_wal",
         "Log WAL usage.",
         "",
         &AUTO_EXPLAIN_LOG_WAL,
@@ -128,7 +160,7 @@ pub fn init() {
     );
 
     GucRegistry::define_bool_guc(
-        "auto_explain.log_triggers",
+        "auto_explain_rs.log_triggers",
         "Include trigger statistics in plans.",
         "This has no effect unless log_analyze is also set.",
         &AUTO_EXPLAIN_LOG_TRIGGERS,
@@ -137,7 +169,7 @@ pub fn init() {
     );
 
     GucRegistry::define_enum_guc(
-        "auto_explain.log_format",
+        "auto_explain_rs.log_format",
         "EXPLAIN format to be used for plan logging.",
         "",
         &AUTO_EXPLAIN_LOG_FORMAT,
@@ -146,7 +178,7 @@ pub fn init() {
     );
 
     GucRegistry::define_enum_guc(
-        "auto_explain.log_level",
+        "auto_explain_rs.log_level",
         "Log level for the plan.",
         "",
         &AUTO_EXPLAIN_LOG_LEVEL,
@@ -155,7 +187,7 @@ pub fn init() {
     );
 
     GucRegistry::define_bool_guc(
-        "auto_explain.log_nested_statements",
+        "auto_explain_rs.log_nested_statements",
         "Log nested statements.",
         "",
         &AUTO_EXPLAIN_LOG_NESTED_STATEMENTS,
@@ -164,7 +196,7 @@ pub fn init() {
     );
 
     GucRegistry::define_bool_guc(
-        "auto_explain.log_timing",
+        "auto_explain_rs.log_timing",
         "Collect timing data, not just row counts.",
         "",
         &AUTO_EXPLAIN_LOG_TIMING,
@@ -174,7 +206,7 @@ pub fn init() {
 
     
     GucRegistry::define_float_guc(
-        "auto_explain.sample_rate",
+        "auto_explain_rs.sample_rate",
         "Fraction ofqueries to process.",
         "",
         &AUTO_EXPLAIN_SAMPLE_RATE,
@@ -185,5 +217,5 @@ pub fn init() {
     );
 
     // pgrx does not implement MarkGUCPrefixReserved() yet
-    // MarkGUCPrefixReserved("auto_explain");
+    // MarkGUCPrefixReserved("auto_explain_rs");
 }
